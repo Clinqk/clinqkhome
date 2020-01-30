@@ -1045,15 +1045,14 @@
   class Help {
     constructor(options) {
       this._el = $.el('#help');
+      this._colors = options.colors;
       this._commands = options.commands;
       this._newTab = options.newTab;
       this._toggled = false;
       this._handleKeydown = this._handleKeydown.bind(this);
       this.toggle = this.toggle.bind(this);
-      this._invertColors = options.invertedColors;
       this._buildAndAppendLists();
       this._registerEvents();
-      this._invertValue;
     }
 
     toggle(show) {
@@ -1077,15 +1076,15 @@
 
       this._el.appendChild(lists);
     }
-    
+
     _buildListCommands(currentCategory) {
       return this._commands
-        .map(({ category, color, name, key, url }) => {
+        .map(({ category, color, name, key, url }, i) => {
           if (category === currentCategory) {
             return `
               <li class="command">
                 <a href="${url}" target="${this._newTab ? '_blank' : '_self'}">
-		  ${
+                  ${
                     this._colors
                       ? `<style>.command-key-${i},.command-name-${i}::after{background:${color};}</style>`
                       : ''
