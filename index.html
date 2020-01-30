@@ -1051,8 +1051,10 @@
       this._toggled = false;
       this._handleKeydown = this._handleKeydown.bind(this);
       this.toggle = this.toggle.bind(this);
+      this._invertColors = options.invertedColors;
       this._buildAndAppendLists();
       this._registerEvents();
+      this._invertValue;
     }
 
     toggle(show) {
@@ -1098,7 +1100,7 @@
         })
         .join('');
     }
-
+	  
     _getCategories() {
       const categories = this._commands
         .map(v => v.category)
