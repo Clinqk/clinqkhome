@@ -1130,7 +1130,7 @@
 
     _buildListCommands(currentCategory) {
       return this._commands
-        .map(({ category, name, key, url }) => {
+        .map(({ category, color, name, key, url }) => {
           if (category === currentCategory) {
             return `
               <li class="command">
@@ -1140,8 +1140,8 @@
                       ? `<style>.command-key-${i},.command-name-${i}::after{background:${color};}</style>`
                       : ''
                   }
-                  <span class="command-key">${key}</span>
-                  <span class="command-name">${name}</span>
+                  <span class="command-key command-key-${i}">${key}</span>
+                  <span class="command-name command-name-${i}">${name}</span>
                 </a>
               </li>
             `;
