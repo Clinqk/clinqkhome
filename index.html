@@ -1052,8 +1052,10 @@
       this._toggled = false;
       this._handleKeydown = this._handleKeydown.bind(this);
       this.toggle = this.toggle.bind(this);
+      this._invertColors = options.invertedColors;
       this._buildAndAppendLists();
       this._registerEvents();
+      this._invertValue;
     }
 
     toggle(show) {
@@ -1526,10 +1528,12 @@
       this._previewValue = this._previewValue.bind(this);
       this._submitForm = this._submitForm.bind(this);
       this._submitWithValue = this._submitWithValue.bind(this);
+      this._invertColors = options.invertedColors;
       this.hide = this.hide.bind(this);
       this.show = this.show.bind(this);
       this._registerEvents();
       this._loadQueryParam();
+      this.invert();
     }
 
     hide() {
@@ -1545,6 +1549,22 @@
       this._inputEl.focus();
     }
 
+    invert() {
+      if (this._invertColors) {
+        const bgcolor = getComputedStyle(document.documentElement).getPropertyValue('--background');
+        const fgcolor = getComputedStyle(document.documentElement).getPropertyValue('--foreground');
+        document.documentElement.style.setProperty('--background', fgcolor);
+        document.documentElement.style.setProperty('--foreground', bgcolor);
+      }
+    }
+
+    _invertConfig() {
+      let isInverted = !CONFIG.invertedColors;
+      localStorage.removeItem('invertColorCookie');
+      localStorage.setItem('invertColorCookie', JSON.stringify(isInverted));
+      location.reload();
+    }
+
     _clearPreview() {
       this._previewValue(this._inputElVal);
       this._inputEl.focus();
@@ -1553,12 +1573,14 @@
     _handleInput() {
       const newQuery = this._inputEl.value;
       const isHelp = newQuery === '?';
+      const isInvert = newQuery === 'invert!';
       const { isKey } = this._parseQuery(newQuery);
       this._inputElVal = newQuery;
       this._suggester.suggest(newQuery);
       this._setBackgroundFromQuery(newQuery);
       if (!newQuery || isHelp) this.hide();
       if (isHelp) this._toggleHelp();
+      if (isInvert) this._invertConfig();
       if (this._instantRedirect && isKey) this._submitWithValue(newQuery);
     }
 
@@ -1660,6 +1682,7 @@
     colors: CONFIG.colors,
     commands: CONFIG.commands,
     newTab: CONFIG.newTab,
+    invertedColors: CONFIG.invertedColors,
   });
 
   const form = new Form({
@@ -1669,6 +1692,7 @@
     parseQuery: queryParser.parse,
     suggester,
     toggleHelp: help.toggle,
+    invertedColors: CONFIG.invertedColors,
   });
 
   new Clock({
