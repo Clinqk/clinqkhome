@@ -1,2 +1,2 @@
 # clinqkhome
-My personal Startpage based of the Tilde startpage by cadejscroggins: https://github.com/cadejscroggins/tilde
+My personal Startpage based off of the Tilde startpage by cadejscroggins: https://github.com/cadejscroggins/tilde
