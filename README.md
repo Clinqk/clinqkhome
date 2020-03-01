@@ -11,10 +11,21 @@ My personal startpage based off of the [***Tilde***](https://github.com/cadejscr
 ## Usage
 
 * Start typing to search with Google. Suggestions will be provided by DuckDuckGo and from you history.
-* Typing a shortcut key followed by a `:` allows searching on the configured site.
-  * Example: `r:cats` searches reddit.com for cats
+* Entering a shortcut key and Enter will redirect to the configured site.
+  Example: `r` redirects to [reddit.com]
+* Entering a shortcut key followed by a `:` allows searching on the configured site.
+  Example: `r:cats` searches [reddit.com] for cats
+* Entering a shortcut key followed by a path will redirect directly to that path.
+  Example: `r/r/cats` redirects to reddit.com/r/cats
+* Entering a full URL will redirect directly to that URL.
 * Type `invert!` for inverted colors.
-* 
+* Configure your sites in the CONFIG part of the html, you can change the shortcut key, background color and configure the search URL.
+#### You can add default suggestions for shortcut keys and change settings like:
+  * Instantly redirecting upon entering a shortcut key
+  * Opening queries in a new tab
+  * The delimiter between a shortcut key and a search query or a path
+  * The delimiter between hours and minutes on the clock
+  * Toggeling a twenty-four-hour clock 
 
 ## Versions
 
