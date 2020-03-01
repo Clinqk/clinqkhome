@@ -682,6 +682,15 @@
     align-items: center;
     width: 100%;
     height: 100%;
+    flex-direction: column;
+  }
+
+  .center1 {
+    display: block;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
   }
 
   .overlay {
@@ -912,7 +921,15 @@
 
 <link rel="icon" type="image/png" href="https://cdn0.iconfinder.com/data/icons/solid-line-essential-ui-icon-set/512/essential_set_home-512.png">
 
-<div class="center"><time class="clock" id="clock"></time></div>
+<div class="center">
+  <div>
+    <time class="clock" id="clock"></time>
+  </div>
+  <div>
+    <button id="myBtn" class="button">COVID-19 Map</button>
+    <button id="myBtn1" class="button1">Infected</button>
+  </div>
+</div>
 
 <form
   autocomplete="off"
@@ -1693,3 +1710,376 @@
     twentyFourHour: CONFIG.twentyFourHourClock,
   });
 </script>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="close">&times;</span>
+      <h2>Map</h2>
+    </div>
+    <div class="modal-body">
+      <div>
+        <iframe style="width:100%;" ; height="650" src="https://coronavirus.app/map?mode=infected&embed=true" frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <h3></h3>
+    </div>
+  </div>
+
+</div>
+  
+<script>
+  // Get the modal
+  var modal = document.getElementById("myModal");
+
+  // Get the button that opens the modal
+  var btn = document.getElementById("myBtn");
+
+  // Get the <span> element that closes the modal
+  var span = document.getElementsByClassName("close")[0];
+
+  // When the user clicks on the button, open the modal
+  btn.onclick = function () {
+    modal.style.display = "block";
+  }
+
+  // When the user clicks on <span> (x), close the modal
+  span.onclick = function () {
+    modal.style.display = "none";
+  }
+
+  // When user clicks anywhere outside of ANY modal, close it
+    window.onclick = function (event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+      if (event.target == modal1) {
+        modal1.style.display = "none";
+      }
+    }
+</script>
+
+<style>
+  
+  .iframe-container {
+    overflow: hidden;
+    padding-top: 50%;
+    position: relative;
+  }
+  
+  .iframe-container iframe {
+    border: 0;
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+  }
+
+  /* The Modal (background) */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    padding: 50px 15% 0 15%;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  }
+
+  /* The Close Button */
+  .close {
+    color: #fff;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  /* Modal Header */
+  .modal-header {
+    padding: 2px 16px;
+    border-radius: 10px 10px 0 0;
+    background-color: #ff416c;
+    color: white;
+  }
+
+  /* Modal Body */
+  .modal-body {
+    background-color: #ff416c;
+  }
+
+  /* Modal Footer */
+  .modal-footer {
+    padding: 2px 16px; /* 2px 16px;*/
+    border-radius: 0 0 10px 10px;
+    background-color: #ff416c;
+    color: white;
+  }
+
+  /* Modal Content */
+  .modal-content {
+    position: relative;
+    width: 100%;
+    animation-name: animatetop;
+    animation-duration: 0.2s
+  }
+
+  /* Add Animation */
+  @keyframes animatetop {
+    from {
+      top: -600px;
+      opacity: 0
+    }
+
+    to {
+      top: 0;
+      opacity: 1
+    }
+  }
+
+  .button {
+    background-color: #3A4452;
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    transition-duration: 0.2s;
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    width: 180px;
+    border-radius: 10px;
+    margin: 15px;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .button:hover {
+    background-color: #ff416c;
+    color: white;
+    box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19);
+    transform: translateY(-4px);
+  }
+  .button:active {
+  background-color: #a72a47;
+  transform: translateY(4px);
+  }
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="myModal1" class="modal1">
+
+  <!-- Modal content -->
+  <div class="modal-content1">
+    <div class="modal-header1">
+      <span class="close1">&times;</span>
+      <h2>Number of Infected</h2>
+    </div>
+    <div class="modal-body1">
+      <table style="width:100%">
+        <tr>
+          <td>
+            <div> <!-- class="iframe-container1" -->
+              <iframe style="width:100%;" ; height="392" src="https://coronavirus.app/chart/evolution/infected?embed=true"
+                frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+              </iframe>
+            </div>
+          </td>
+          <td>
+            <div>
+              <iframe style="width:100%;" ; height="392" src="https://coronavirus.app/chart/new/infected?embed=true" frameborder="0"
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+              </iframe>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="modal-footer1">
+      <h3></h3>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Get the modal
+  var modal1 = document.getElementById("myModal1");
+
+  // Get the button that opens the modal
+  var btn1 = document.getElementById("myBtn1");
+
+  // Get the <span> element that closes the modal
+  var span1 = document.getElementsByClassName("close1")[0];
+
+  // When the user clicks on the button, open the modal
+  btn1.onclick = function () {
+    modal1.style.display = "block";
+  }
+
+  // When the user clicks on <span> (x), close the modal
+  span1.onclick = function () {
+    modal1.style.display = "none";
+  }
+</script>
+
+<style>
+
+  .iframe-container1 {
+      overflow: hidden;
+      padding-top: 57%;
+      position: relative;
+    }
+  
+  .iframe-container1 iframe {
+    border: 0;
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+  }
+
+  /* The Modal (background) */
+  .modal1 {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    padding: 50px 15% 0 15%;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+
+  /* The Close Button */
+  .close1 {
+    color: #fff;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .close1:hover,
+  .close1:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  /* Modal Header */
+  .modal-header1 {
+    padding: 2px 16px;
+    border-radius: 10px 10px 0 0;
+    background-color: #ff416c;
+    color: white;
+  }
+
+  /* Modal Body */
+  .modal-body1 {
+    padding: 0px;
+    background-color: #fff;
+  }
+
+  /* Modal Footer */
+  .modal-footer1 {
+    padding: 2px 16px; /* 2px 16px;*/
+    border-radius: 0 0 10px 10px;
+    background-color: #ff416c;
+    color: white;
+  }
+
+  /* Modal Content */
+  .modal-content1 {
+    position: relative;
+    width: 100%;
+    animation-name: animatetop;
+    animation-duration: 0.2s
+  }
+
+  /* Add Animation */
+  @keyframes animatetop {
+    from {
+      top: -600px;
+      opacity: 0
+    }
+
+    to {
+      top: 0;
+      opacity: 1
+    }
+  }
+
+  .button1 {
+    background-color: #3A4452;
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    transition-duration: 0.2s;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    width: 180px;
+    border-radius: 10px;
+    margin: 15px;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .button1:hover {
+    background-color: #ff416c;
+    color: white;
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+    transform: translateY(-4px);
+  }
+
+  .button1:active {
+  background-color: #a72a47;
+  transform: translateY(4px);
+  }
+</style>
