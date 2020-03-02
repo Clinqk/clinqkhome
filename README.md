@@ -29,5 +29,5 @@ My personal startpage based off of the [***Tilde***](https://github.com/cadejscr
 
 ## Versions
 
-* [index.html](/index.html) and the [direct link](https://clinqkhome.now.sh/) are now updated with buttons featuring embeded iframes with the latest COVID-19 updates and a global infections map.
-* [legacy.html](/legacy.html) and therefor [link/legacy.html](https://clinqkhome.now.sh/legacy.html) feature the old page that loads a lot faster.
+* [index.html](/index.html) and the [direct link](https://clinqkhome.now.sh/) features the legacy version with a fast loading site.
+* [experimental.html](/experimental.html) and therefor [link/experimental.html](https://clinqkhome.now.sh/experimental.html) includes buttons that load embedded iframes featuring latest Coronavirus updates and a map. (These might be hidden/commented in the file)
