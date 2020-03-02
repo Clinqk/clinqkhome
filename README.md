@@ -30,4 +30,4 @@ My personal startpage based off of the [***Tilde***](https://github.com/cadejscr
 ## Versions
 
 * [index.html](/index.html) and the [direct link](https://clinqkhome.now.sh/) features the legacy version with a fast loading site.
-* [experimental.html](/experimental.html) and therefor [link/experimental.html](https://clinqkhome.now.sh/experimental.html) includes buttons that load embedded iframes featuring latest Coronavirus updates and a map.
+* [experimental.html](/experimental.html) and therefor [link/experimental.html](https://clinqkhome.now.sh/experimental.html) includes buttons that load embedded iframes featuring latest Coronavirus updates and a map. (These might be hidden/commented in the file)
