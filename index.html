@@ -607,6 +607,12 @@
         /* colors */
     --background: #fff;
     --foreground: #232931;
+    --textback: #232931;
+    --textfront: #232931;
+    --neoback:5px 5px 10px #606060, 
+              -5px -5px 10px #ffffff;
+    --neofront: 5px 5px 10px #0e1014, 
+              -5px -5px 10px #38424e;
     --searchBackground: #000;
     --searchForeground: #fff;
 
@@ -936,7 +942,7 @@
 
 <link rel="icon" type="image/png" href="https://cdn0.iconfinder.com/data/icons/solid-line-essential-ui-icon-set/512/essential_set_home-512.png">
 
-<div class="center"><time class="clock" id="clock"></time></div>
+<div class="center neomorph"><time class="clock" id="clock"></time></div>
 
 <form
   autocomplete="off"
@@ -951,6 +957,13 @@
 </form>
 
 <aside class="center help overlay" id="help"></aside>
+
+<style>
+  .neomorph {
+    color: var(--textback) !important;
+    text-shadow: var(--neoback);
+  }
+</style>
 
 <script>
   const $ = {
@@ -1569,8 +1582,16 @@
       if (this._invertColors) {
         const bgcolor = getComputedStyle(document.documentElement).getPropertyValue('--background');
         const fgcolor = getComputedStyle(document.documentElement).getPropertyValue('--foreground');
+        const txtbgcolor = getComputedStyle(document.documentElement).getPropertyValue('--textback');
+        const txtfgcolor = getComputedStyle(document.documentElement).getPropertyValue('--textfront');
+        const neobgcolor = getComputedStyle(document.documentElement).getPropertyValue('--neoback');
+        const neofgcolor = getComputedStyle(document.documentElement).getPropertyValue('--neofront');
         document.documentElement.style.setProperty('--background', fgcolor);
         document.documentElement.style.setProperty('--foreground', bgcolor);
+        document.documentElement.style.setProperty('--textback', txtfgcolor);
+        document.documentElement.style.setProperty('--textfront', txtbgcolor);
+        document.documentElement.style.setProperty('--neoback', neofgcolor);
+        document.documentElement.style.setProperty('--neofront', neobgcolor);
       }
     }
 
