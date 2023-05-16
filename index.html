@@ -1822,10 +1822,20 @@
 
 <style>
 
-.clock {
+.hotbody {
+  margin: 0;
+  font-size: 2rem;
+  display: flex;
+  flex: 1;
+  min-height: 100vh;
+  align-items: center;
+  background: #232931;
+}
+	
+.clocky {
   width: 30rem;
   height: 30rem;
-  border: 7px solid #282828;
+  border: 7px solid #232931;
   box-shadow: -4px -4px 10px rgba(67,67,67,0.5),
                 inset 4px 4px 10px rgba(0,0,0,0.5),
                 inset -4px -4px 10px rgba(67,67,67,0.5),
@@ -1842,7 +1852,7 @@
   width: 100%;
   height: 100%;
   border-radius: 100%;
-  background: #282828;
+  background: #232931;
   
  
   overflow: hidden;
@@ -1943,7 +1953,7 @@
   left: 10%;
   width: 80%;
   height: 80%;
-  background: #282828;
+  background: #232931;
   -webkit-border-radius: 100%;
   -moz-border-radius: 100%;
   border-radius: 100%;
@@ -1996,7 +2006,8 @@
     </style>
 </head>
 <body>
-    <div class="clock">
+    <div class="hotbody">
+    <div class="clocky">
         <div class="outer-clock-face">
           <div class="marking marking-one"></div>
           <div class="marking marking-two"></div>
@@ -2014,6 +2025,7 @@
             <div class="hand second-hand"></div>
           </div>
         </div>
+      </div>
       </div>
   <script>
  
