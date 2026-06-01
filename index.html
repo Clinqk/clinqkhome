@@ -1,0 +1,1208 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="color-scheme" content="dark light" />
+<meta name="robots" content="noindex" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>~</title>
+
+<style>
+  @font-face {
+    font-family: 'SpaceGrotesk';
+    font-style: normal;
+    font-weight: normal;
+    src: url('./fonts/SpaceGrotesk-Regular.woff2') format('woff2');
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'SpaceGrotesk';
+    font-style: normal;
+    font-weight: bold;
+    src: url('./fonts/SpaceGrotesk-Bold.woff2') format('woff2');
+    font-display: swap;
+  }
+
+  :root {
+    --color-background: #111;
+    --color-text-subtle: #888;
+    --color-text: #eee;
+    --font-family: Google Sans Medium, Inter, SpaceGrotesk, -apple-system, Helvetica, sans-serif;
+    --font-size: clamp(16px, 1.5vw, 18px);
+    --color-accent: #e34;
+    --transition-speed: 200ms;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --color-background: #e8e8e8;
+      --color-text-subtle: #606060;
+      --color-text: #111;
+    }
+  }
+</style>
+
+<script>
+  const CONFIG = {
+    commandPathDelimiter: '/',
+    commandSearchDelimiter: ' ',
+    defaultSearchTemplate: 'https://duckduckgo.com/?q={}',
+    openLinksInNewTab: false,
+    suggestionLimit: 10,
+
+    // ---- TOGGLE: how the commands are arranged on the wheel ----
+    //   'list'     -> keep COMMANDS order
+    //   'category' -> sort/group by category (gaps between categories)
+    sortMode: 'category',
+
+    // Angular gap (radians) between categories when the menu is open.
+    // Larger = tighter within-category packing + larger inter-category gaps.
+    categoryGapSize: 0.2,
+
+    // Alternating radial offset added in menu mode to keep horizontal-text
+    // styles from overlapping at the top/bottom of the wheel. The strength
+    // is automatically scaled by how "horizontal" each item's position is
+    // (full at top/bottom, zero at left/right). Set to 0 to disable.
+    horizontalStagger: -0.01,
+
+    // ---- TOGGLE: menu view layout style ----
+    //   'circle'    -> circular gradient background
+    //   'rectangle' -> rounded rectangle, same shape as the clock (default)
+    //   'pill'      -> elongated pill shape
+    //   'underline' -> just the name with a thick gradient underline
+    //   'minimal'   -> just the name, painted with the gradient on hover
+    //   'radial'    -> spokes radiating outward from the center (underline)
+    //   'card'      -> rounded card with both key and name visible
+    menuStyle: 'card',
+
+    suggestionDefaults: {},
+
+    suggestionInfluencers: [
+      { name: 'Default',    limit: 4, minChars: 1 },
+      { name: 'History',    limit: 4, minChars: 1 },
+      { name: 'DuckDuckGo', limit: 8, minChars: 1 },
+    ],
+  };
+
+  // prettier-ignore
+  const COMMANDS = new Map([
+    ['a',            { name: 'AI',         category: 'AI',    color: 'linear-gradient(135deg, #10a37f, #1a1a1a)', suggestions: ['a/perplexity', 'a/gemini', 'a/chatgpt', 'a/duck', 'a/lumo'], url: 'https://google.com/ai' }],
+    ['a/perplexity', { url: 'https://www.perplexity.ai' }],
+    ['a/gemini',     { url: 'https://gemini.google.com' }],
+    ['a/chatgpt',    { url: 'https://chatgpt.com' }],
+    ['a/duck',       { url: 'https://duck.ai' }],
+    ['a/lumo',       { url: 'https://lumo.proton.me/u/0' }],
+    ['o',            { name: 'OpenRouter', category: 'AI',    color: 'linear-gradient(135deg, #6B6B6B, #1a1a1a)', url: 'https://openrouter.ai/models' }],
+
+    ['r',  { name: 'Reddit',    category: 'Feed', color: 'linear-gradient(135deg, #ff4500, #D33A02)', searchTemplate: '/search?q={}',  url: 'https://www.reddit.com' }],
+    ['h',  { name: 'HN',        category: 'Feed', color: 'linear-gradient(135deg, #f6f6ef, #ff6600)', searchTemplate: 'https://hn.algolia.com/?dateRange=all&page=0&prefix=false&query={}&sort=byPopularity&type=all', url: 'https://news.ycombinator.com' }],
+    ['i',  { name: 'Instagram', category: 'Feed', color: 'linear-gradient(135deg, #405de6, #fd1d1d)', searchTemplate: '/explore/tags/{}', url: 'https://www.instagram.com' }],
+    ['n',  { name: 'NY Times',  category: 'Feed', color: 'linear-gradient(135deg, #757575, #292929)', searchTemplate: '/search?query={}', url: 'https://www.nytimes.com' }],
+    ['gu', { name: 'Guardian',  category: 'Feed', color: 'linear-gradient(135deg, #052962, #021026)', searchTemplate: '/',               url: 'https://www.theguardian.com' }],
+    ['z',  { name: 'Zeit',      category: 'Feed', color: 'linear-gradient(135deg, #94a0b0, #1d1d1b)', searchTemplate: '/suche/index?q={}', url: 'https://www.zeit.de' }],
+
+    ['c',  { name: 'Calender',  category: 'Tools', color: 'linear-gradient(135deg, #B5D0FB, #4484F0)', searchTemplate: '/calendar/r/search?q={}', url: 'https://calendar.google.com' }],
+    ['m',  { name: 'Maps',      category: 'Tools', color: 'linear-gradient(135deg, #D4F1C9, #1EA361)', searchTemplate: '/maps/search/{}', url: 'https://www.google.com/maps' }],
+    ['t',  { name: 'Translate', category: 'Tools', color: 'linear-gradient(135deg, #73AAF1, #1566D1)', searchTemplate: '/?sl=auto&tl=en&text={}&op=translate', url: 'https://translate.google.com' }],
+    ['th', { name: 'Thesaurus', category: 'Tools', color: 'linear-gradient(135deg, #168BE8, #BF76C7)', searchTemplate: '/{}/synonyms', url: 'https://www.powerthesaurus.org' }],
+    ['go', { name: 'GoFile',    category: 'Tools', color: 'linear-gradient(135deg, #e4ac36, #1e1e1e)', searchTemplate: '/', url: 'https://gofile.io/uploadFiles' }],
+    ['ip', { name: 'IP',        category: 'Tools', color: 'linear-gradient(135deg, #303030, #272727)', url: 'https://www.top10vpn.com/tools/what-is-my-ip' }],
+
+    ['y',  { name: 'YouTube',    category: 'Media', color: 'linear-gradient(135deg, #FF0101, #2C2C2C)', searchTemplate: '/results?search_query={}', url: 'https://www.youtube.com/feed/subscriptions' }],
+    ['s',  { name: 'Spotify',    category: 'Media', color: 'linear-gradient(135deg, #1ED760, #171717)', searchTemplate: '/search/{}', url: 'https://open.spotify.com' }],
+    ['la', { name: 'LastFM',     category: 'Media', color: 'linear-gradient(135deg, #b90000, #303030)', searchTemplate: '/search?term={}', url: 'https://www.last.fm' }],
+    ['le', { name: 'Letterboxd', category: 'Media', color: 'linear-gradient(135deg, #00440D, #1B2126)', searchTemplate: '/search/{}', url: 'https://letterboxd.com' }],
+
+    ['am',  { name: 'Amazon',    category: 'Sites', color: 'linear-gradient(135deg, #FF9900, #232F3E)', searchTemplate: '/s?k={}', url: 'https://www.amazon.de' }],
+    ['w',   { name: 'Wikipedia', category: 'Sites', color: 'linear-gradient(135deg, #D6D6D6, #868686)', searchTemplate: '/w/index.php?search={}', url: 'https://en.wikipedia.org' }],
+    ['g',   { name: 'Gmail',     category: 'Sites', color: 'linear-gradient(135deg, #ffffff, #D44B3D)', searchTemplate: '/mail/u/0/#search/{}', url: 'https://mail.google.com/mail/u/0/#inbox' }],
+    ['aol', { name: 'AOL',       category: 'Sites', color: 'linear-gradient(135deg, #ffffff, #1291E0)', searchTemplate: '/', url: 'https://mail.aol.com/webmail-std/en-us/suite' }],
+    ['ge',  { name: 'Geizhals',  category: 'Sites', color: 'linear-gradient(135deg, #ffffff, #115699)', searchTemplate: '/?fs={}', url: 'https://geizhals.de' }],
+
+    ['git', { name: 'GitHub', category: 'Data', color: 'linear-gradient(135deg, #fafbfc, #24292e)', searchTemplate: '/search?q={}', suggestions: ['g/copilot', 'g/trending'], url: 'https://github.com' }],
+    ['13',  { name: '1337x',  category: 'Data', color: 'linear-gradient(135deg, #D63600, #161616)', searchTemplate: '/search/{}/1/', url: 'https://1337x.to/trending' }],
+  ]);
+</script>
+
+<template id="commands-template">
+  <style>
+    nav {
+      align-items: center;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      min-height: 100dvh;
+      position: relative;
+      width: 100%;
+    }
+
+    .commands {
+      aspect-ratio: 1;
+      height: min(55vh, 55vw);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      position: relative;
+    }
+
+    .commands li {
+      border-radius: 50%;
+      height: calc(var(--item-size) * 100%);
+      left: calc(var(--x) * 100%);
+      position: absolute;
+      top: calc(var(--y) * 100%);
+      transform: translate(-50%, -50%) scale(0.8);
+      transition:
+        height var(--transition-speed),
+        left var(--transition-speed),
+        opacity var(--transition-speed),
+        top var(--transition-speed),
+        transform var(--transition-speed),
+        width var(--transition-speed);
+      width: calc(var(--item-size) * 100%);
+    }
+
+    nav.menu-open .commands li {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .command {
+      align-items: center;
+      border-radius: 50%;
+      color: var(--color-text);
+      display: flex;
+      height: 100%;
+      isolation: isolate;
+      justify-content: center;
+      outline: 0;
+      position: relative;
+      text-align: center;
+      text-decoration: none;
+      transition: transform var(--transition-speed);
+      width: 100%;
+    }
+
+    .command::before {
+      background: var(--command-color, transparent);
+      border-radius: 50%;
+      content: '';
+      inset: 0;
+      opacity: 0;
+      position: absolute;
+      transition:
+        border-radius var(--transition-speed),
+        opacity var(--transition-speed);
+      z-index: -1;
+    }
+
+    .command:where(:focus, :hover)::before { opacity: 1; }
+    nav.menu-open .command::before { opacity: 1; }
+
+    .key {
+      color: var(--color-text-subtle);
+      position: absolute;
+      transition: all var(--transition-speed);
+    }
+
+    .command:where(:focus, :hover) .key,
+    nav.menu-open .key {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(1.5em) scale(0.9);
+    }
+
+    .name {
+      font-size: 0.7em;
+      opacity: 0;
+      padding: 0 0.25em;
+      pointer-events: none;
+      transform: translateY(-1.5em) scale(0.9);
+      transition: all var(--transition-speed);
+      white-space: nowrap;
+    }
+
+    .command:where(:focus, :hover) .name {
+      opacity: 1;
+      transform: translateY(0) scale(1.3);
+    }
+
+    nav.menu-open .name {
+      font-size: clamp(0.95em, 1.3vw, 1.25em);
+      font-weight: bold;
+      opacity: 1;
+      padding: 0;
+      transform: translateY(0);
+    }
+
+    nav.menu-open .command:where(:focus, :hover) .name {
+      transform: translateY(0) scale(1.15);
+    }
+
+    .command:where(:focus, :hover) .name,
+    nav.menu-open .name {
+      color: #fff;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.55);
+    }
+
+    /* ============== MENU STYLES ============== */
+
+    /* ----- circle ----- */
+    nav.menu-open.style-circle .commands li {
+      height: calc(var(--item-size) * 85%);
+      width: calc(var(--item-size) * 85%);
+    }
+    nav.menu-open.style-circle .command::before { border-radius: 50%; }
+    nav.menu-open.style-circle .command { overflow: hidden; border-radius: 50%; }
+    nav.menu-open.style-circle .name {
+      font-size: clamp(0.6em, 0.85vw, 0.85em);
+      hyphens: auto;
+      line-height: 1.05;
+      max-width: 78%;
+      padding: 0;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    /* ----- rectangle (default) — matches the clock exactly ----- */
+    nav.menu-open.style-rectangle .commands li {
+      height: calc(var(--item-size) * 50%);
+      width: calc(var(--item-size) * 100%);
+    }
+    nav.menu-open.style-rectangle .command::before { opacity: 0; }
+    nav.menu-open.style-rectangle .name {
+      background: var(--command-color);
+      border-radius: 0.7em;     /* 0.35em same as .digital-clock */
+      padding: 0.6em 1.1em;     /* 0.3em 0.55em same as .digital-clock */
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.66);
+    }
+
+    /* ----- pill ----- */
+    nav.menu-open.style-pill .commands li {
+      height: calc(var(--item-size) * 50%);
+      width: calc(var(--item-size) * 100%);
+    }
+    nav.menu-open.style-pill .command::before { opacity: 0; }
+    nav.menu-open.style-pill .name {
+      background: var(--command-color);
+      border-radius: 999px;
+      padding: 0.3em 0.8em;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+
+    }
+
+    /* ----- underline ----- */
+    nav.menu-open.style-underline .command::before { opacity: 0; }
+    nav.menu-open.style-underline .name {
+      background-image: var(--command-color);
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+      background-size: 100% 0.16em;
+      color: var(--color-text);
+      padding-bottom: 0.2em;
+      text-shadow: 0 2px 42px rgba(255, 255, 255, 0.5);
+    }
+
+    /* ----- minimal ----- */
+    nav.menu-open.style-minimal .command::before { opacity: 0; }
+    nav.menu-open.style-minimal .name {
+      color: var(--color-text);
+      text-shadow: none;
+    }
+    nav.menu-open.style-minimal .command:where(:focus, :hover) .name {
+      background-image: var(--command-color);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0px 36px rgba(255, 255, 255, 1);
+    }
+
+    /* ----- radial (spokes) — text at the wheel edge, rotated radially ----- */
+    nav.menu-open.style-radial .commands li {
+      height: calc(var(--item-size) * 55%);
+      width: calc(var(--item-size) * 180%);
+    }
+    nav.menu-open.style-radial .command {
+      transform: rotate(var(--text-angle, 0deg));
+    }
+    nav.menu-open.style-radial .command::before { opacity: 0; }
+    nav.menu-open.style-radial .name {
+      background-image: var(--command-color);
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+      background-size: 100% 0.16em;
+      color: var(--color-text);
+      padding-bottom: 0.3em;
+      text-shadow: 0 2px 24px rgba(255, 255, 255, 0.25);
+    }
+
+    /* ----- card ----- */
+    nav.menu-open.style-card .commands li {
+      height: calc(var(--item-size) * 80%);
+      width: calc(var(--item-size) * 80%);
+    }
+    nav.menu-open.style-card .command::before { border-radius: 99em; }
+    nav.menu-open.style-card .name {
+      font-size: clamp(0.8em, 0.9vw, 0.95em);
+      hyphens: auto;
+      line-height: 1.1;
+      max-width: 92%;
+      transform: translateY(-0.45em);
+      white-space: normal;
+      word-break: break-word;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.66);
+    }
+    nav.menu-open.style-card .key {
+      color: #fff;
+      font-size: 0.9em;
+      opacity: 0.7;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+      transform: translateY(1.5em) scale(0.85);
+    }
+
+    /* ============== CLOCK ============== */
+    .clock {
+      aspect-ratio: 1;
+      height: calc(min(55vh, 55vw) * 0.85);
+      left: 50%;
+      pointer-events: none;
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .hand {
+      background: var(--color-text);
+      border-radius: 2px;
+      bottom: 50%;
+      left: 50%;
+      position: absolute;
+      transform-origin: bottom center;
+    }
+
+    .hand--hour   { height: 30%; width: 3px; margin-left: -1.5px; }
+    .hand--minute { height: 40%; width: 2px; margin-left: -1px; }
+    .hand--second {
+      background: var(--color-accent);
+      height: 45%; width: 1px; margin-left: -0.5px;
+    }
+
+    .dot {
+      background: var(--color-text);
+      border-radius: 50%;
+      height: 6px;
+      left: 50%;
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 6px;
+    }
+
+    .digital-clock {
+      background: var(--color-background);
+      border: 0;
+      border-radius: 0.35em;
+      color: var(--color-text);
+      cursor: pointer;
+      font-family: var(--font-family);
+      font-size: clamp(1.3rem, 3.6vw, 2.6rem);
+      font-variant-numeric: tabular-nums;
+      font-weight: bold;
+      left: 50%;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      outline: 0;
+      padding: 0.3em 0.55em;
+      pointer-events: auto;
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      transition:
+        background var(--transition-speed),
+        color var(--transition-speed),
+        transform var(--transition-speed);
+      z-index: 2;
+    }
+
+    .digital-clock:hover {
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+
+    nav.menu-open .digital-clock {
+      background: var(--color-accent);
+      color: #fff;
+    }
+  </style>
+  <nav>
+    <menu class="commands"></menu>
+    <div class="clock">
+      <div class="hand hand--hour"></div>
+      <div class="hand hand--minute"></div>
+      <div class="hand hand--second"></div>
+      <div class="dot"></div>
+      <button class="digital-clock" type="button" aria-label="Toggle menu"></button>
+    </div>
+  </nav>
+</template>
+
+<template id="command-template">
+  <li>
+    <a class="command" rel="noopener noreferrer" aria-label="">
+      <span class="key" aria-hidden="true"></span>
+      <span class="name"></span>
+    </a>
+  </li>
+</template>
+
+<script type="module">
+  class Commands extends HTMLElement {
+    #menuOpen = false;
+    #entries = [];
+    #items = [];
+    #nav = null;
+    #commandsEl = null;
+    #boundaries = 0;
+
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' });
+      const template = document.getElementById('commands-template');
+      const clone = template.content.cloneNode(true);
+      this.#nav = clone.querySelector('nav');
+      this.#nav.classList.add(`style-${CONFIG.menuStyle || 'rectangle'}`);
+      this.#commandsEl = clone.querySelector('.commands');
+      const commandTemplate = document.getElementById('command-template');
+
+      let entries = [...COMMANDS.entries()].filter(
+        ([, { name, url }]) => name && url
+      );
+
+      if (CONFIG.sortMode === 'category') {
+        entries.sort((a, b) => {
+          const catA = a[1].category || '~';
+          const catB = b[1].category || '~';
+          const cmp = catA.localeCompare(catB);
+          if (cmp !== 0) return cmp;
+          return a[0].localeCompare(b[0]);
+        });
+      }
+
+      this.#entries = entries;
+      const total = entries.length;
+
+      let boundaries = 0;
+      let prev = null;
+      for (const [, cmd] of entries) {
+        const cat = cmd.category || '';
+        if (prev !== null && cat !== prev) boundaries++;
+        prev = cat;
+      }
+      if (
+        entries.length > 1 &&
+        (entries[0][1].category || '') !==
+          (entries[entries.length - 1][1].category || '')
+      ) {
+        boundaries++;
+      }
+      this.#boundaries = boundaries;
+
+      this.#commandsEl.style.setProperty(
+        '--item-size',
+        Math.sin(Math.PI / total) / 0.86
+      );
+
+      for (const [, [key, { name, url, color }]] of entries.entries()) {
+        const cloneItem = commandTemplate.content.cloneNode(true);
+        const command = cloneItem.querySelector('.command');
+        command.href = url;
+        command.setAttribute('aria-label', name);
+        if (color) command.style.setProperty('--command-color', color);
+        if (CONFIG.openLinksInNewTab) command.target = '_blank';
+        cloneItem.querySelector('.key').innerText = key;
+        cloneItem.querySelector('.name').innerText = name;
+        this.#commandsEl.append(cloneItem);
+      }
+
+      this.shadowRoot.append(clone);
+      this.#items = this.#commandsEl.querySelectorAll('li');
+
+      this.#updatePositions();
+
+      for (const [i] of entries.entries()) {
+        const li = this.#items[i];
+        li.addEventListener('mouseenter', () => this.#onHover(i));
+        li.addEventListener('mouseleave', () => this.#onLeave(i));
+      }
+
+      const digitalClock = this.shadowRoot.querySelector('.digital-clock');
+      digitalClock.addEventListener('click', () => this.#toggleMenu());
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.#menuOpen) this.#closeMenu();
+      });
+
+      this.#startClock(digitalClock);
+    }
+
+    #toggleMenu() {
+      this.#menuOpen = !this.#menuOpen;
+      this.#resetHoverStyles();
+      this.#nav.classList.toggle('menu-open', this.#menuOpen);
+      this.#updatePositions();
+    }
+
+    #closeMenu() {
+      if (!this.#menuOpen) return;
+      this.#menuOpen = false;
+      this.#nav.classList.remove('menu-open');
+      this.#resetHoverStyles();
+      this.#updatePositions();
+    }
+
+    #resetHoverStyles() {
+      for (const item of this.#items) {
+        item.style.opacity = '';
+        item.style.transform = '';
+        item.style.zIndex = '';
+      }
+    }
+
+    #updatePositions() {
+      const total = this.#entries.length;
+      const isMenu = this.#menuOpen;
+      const style = CONFIG.menuStyle || 'rectangle';
+
+      // Only horizontal-text styles benefit from a radial stagger to avoid
+      // top/bottom overlap. Circles/cards/radial aren't included: circles are
+      // already round (stagger would just create a zigzag), and radial spokes
+      // are oriented along the radius so they don't overlap horizontally.
+      const horizontalTextStyles = new Set([
+        'rectangle', 'pill',
+      ]);
+      const useStagger = isMenu && horizontalTextStyles.has(style);
+      const staggerAmount = CONFIG.horizontalStagger ?? 0.06;
+
+      const apply = (i, angle) => {
+        let r = 0.5;
+
+        if (useStagger) {
+          // horizontalness: 0 at left/right, 1 at top/bottom
+          const horizontalness = Math.abs(Math.sin(angle));
+          const sign = i % 2 === 0 ? -1 : 1;
+          r += sign * staggerAmount * horizontalness;
+        }
+
+        this.#items[i].style.setProperty('--x', 0.5 + r * Math.cos(angle));
+        this.#items[i].style.setProperty('--y', 0.5 + r * Math.sin(angle));
+
+        // For radial mode: text rotates to read outward from the center
+        // along the radial direction. (No flipping — the user's preferred
+        // value.)
+        const rawRotation = (angle * 180) / Math.PI;
+        let textRotation = ((rawRotation % 360) + 360) % 360;
+        if (textRotation > 180) textRotation -= 360;
+        if (textRotation > 90 || textRotation < -90) textRotation += 180;
+        this.#items[i].style.setProperty('--text-angle', `${textRotation}deg`);
+      };
+
+      if (
+        CONFIG.sortMode !== 'category' ||
+        !this.#menuOpen ||
+        this.#boundaries === 0
+      ) {
+        for (let i = 0; i < total; i++) {
+          const angle = (i / total) * 2 * Math.PI - Math.PI / 2;
+          apply(i, angle);
+        }
+        return;
+      }
+
+      const gapSize = CONFIG.categoryGapSize || 0.15;
+      const totalGap = gapSize * this.#boundaries;
+      const itemSpacing = (2 * Math.PI - totalGap) / total;
+
+      let angle = -Math.PI / 2;
+      let prev = null;
+      for (let i = 0; i < total; i++) {
+        const cat = this.#entries[i][1].category || '';
+        if (prev !== null && cat !== prev) angle += gapSize;
+        apply(i, angle);
+        angle += itemSpacing;
+        prev = cat;
+      }
+    }
+
+    #onHover(i) {
+      if (this.#menuOpen) {
+        this.#items[i].style.transform = 'translate(-50%, -50%) scale(1.1)';
+        this.#items[i].style.zIndex = '3';
+        return;
+      }
+      const total = this.#entries.length;
+      for (let j = 0; j < total; j++) {
+        const dist = Math.min(Math.abs(j - i), total - Math.abs(j - i));
+        if (dist === 0) {
+          this.#items[j].style.transform = 'translate(-50%, -50%) scale(1)';
+          this.#items[j].style.zIndex = '3';
+        } else if (dist === 1) {
+          this.#items[j].style.opacity = '0.25';
+        } else if (dist === 2) {
+          this.#items[j].style.opacity = '0.5';
+        } else if (dist === 3) {
+          this.#items[j].style.opacity = '0.75';
+        }
+      }
+    }
+
+    #onLeave(i) {
+      if (this.#menuOpen) {
+        this.#items[i].style.transform = '';
+        this.#items[i].style.zIndex = '';
+        return;
+      }
+      for (const item of this.#items) {
+        item.style.opacity = '';
+        item.style.transform = '';
+        item.style.zIndex = '';
+      }
+    }
+
+    #startClock(digitalClock) {
+      const hour = this.shadowRoot.querySelector('.hand--hour');
+      const minute = this.shadowRoot.querySelector('.hand--minute');
+      const second = this.shadowRoot.querySelector('.hand--second');
+
+      const tick = () => {
+        const now = new Date();
+        const h = now.getHours() % 12;
+        const m = now.getMinutes();
+        const s = now.getSeconds();
+        second.style.transform = `rotate(${s * 6}deg)`;
+        minute.style.transform = `rotate(${(m + s / 60) * 6}deg)`;
+        hour.style.transform = `rotate(${(h + m / 60) * 30}deg)`;
+
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        digitalClock.innerText = `${hh}:${mm}:${ss}`;
+      };
+
+      tick();
+      setInterval(tick, 1000);
+    }
+  }
+
+  customElements.define('commands-component', Commands);
+</script>
+
+<template id="search-template">
+  <style>
+    input,
+    button {
+      -moz-appearance: none;
+      font-family: var(--font-family);
+      -webkit-appearance: none;
+      background: transparent;
+      border: 0;
+      display: block;
+      outline: 0;
+    }
+
+    .dialog {
+      align-items: center;
+      background: var(--color-background);
+      border: none;
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      justify-content: center;
+      left: 0;
+      opacity: 0;
+      padding: 0;
+      top: 0;
+      transform: translateY(10px);
+      transition:
+        opacity var(--transition-speed),
+        transform var(--transition-speed),
+        background var(--transition-speed);
+      width: 100%;
+    }
+
+    .dialog[open] { display: flex; }
+    .dialog.visible { opacity: 1; transform: translateY(0); }
+    .form { width: 100%; }
+
+    .sr-only {
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      height: 1px;
+      overflow: hidden;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+
+    .input {
+      color: var(--color-text);
+      font-size: 2rem;
+      font-weight: bold;
+      padding: 0;
+      text-align: center;
+      width: 100%;
+    }
+
+    .suggestions {
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      justify-content: center;
+      list-style: none;
+      margin: 1rem 0 0;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .suggestion {
+      color: var(--color-text);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 1rem;
+      position: relative;
+      transition: color var(--transition-speed);
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    .suggestion:where(:focus, :hover) { color: var(--color-background); }
+    .suggestions:hover .suggestion:focus:not(:hover) { color: var(--color-text); }
+
+    .suggestion::before {
+      background: var(--suggestion-color, var(--color-text));
+      border-radius: 1em;
+      content: ' ';
+      inset: 0.8em 0.4em;
+      opacity: 0;
+      position: absolute;
+      transform: translateY(0.3em) scale(0.9);
+      transition: all var(--transition-speed);
+      z-index: -1;
+    }
+
+    .suggestion:where(:focus, :hover)::before { opacity: 1; transform: translateY(0); }
+    .suggestions:hover .suggestion:focus:not(:hover)::before {
+      opacity: 0; transform: translateY(0.3em) scale(0.9);
+    }
+
+    .match { color: var(--color-text-subtle); transition: color var(--transition-speed); }
+    .suggestion:where(:focus, :hover) .match { color: var(--color-background); }
+    .suggestions:hover .suggestion:focus:not(:hover) .match { color: var(--color-text-subtle); }
+
+    @media (min-width: 700px) { .suggestions { flex-direction: row; } }
+  </style>
+  <dialog class="dialog" aria-label="Search">
+    <form autocomplete="off" class="form" method="dialog" spellcheck="false">
+      <label for="search-input" class="sr-only">Search</label>
+      <input class="input" id="search-input" type="text" />
+      <menu class="suggestions"></menu>
+    </form>
+  </dialog>
+</template>
+
+<template id="suggestion-template">
+  <li>
+    <button class="suggestion" type="button"></button>
+  </li>
+</template>
+
+<template id="match-template">
+  <span class="match"></span>
+</template>
+
+<script type="module">
+  const HISTORY_KEY = 'searchHistory';
+  const HISTORY_LIMIT = 100;
+
+  class Search extends HTMLElement {
+    #dialog;
+    #form;
+    #input;
+    #suggestions;
+    #lastSuggestions = [];
+    #closeController = null;
+
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' });
+      const template = document.getElementById('search-template');
+      const clone = template.content.cloneNode(true);
+      this.#dialog = clone.querySelector('.dialog');
+      this.#form = clone.querySelector('.form');
+      this.#input = clone.querySelector('.input');
+      this.#suggestions = clone.querySelector('.suggestions');
+      this.#form.addEventListener('submit', this.#onSubmit, false);
+      this.#input.addEventListener('input', this.#onInput);
+      this.#suggestions.addEventListener('click', this.#onSuggestionClick);
+      document.addEventListener('keydown', this.#onKeydown);
+      document.addEventListener('paste', this.#onPaste);
+      this.shadowRoot.append(clone);
+    }
+
+    static #escapeRegexCharacters(s) {
+      return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
+
+    static #fetchDuckDuckGoSuggestions(search) {
+      return new Promise((resolve) => {
+        window.autocompleteCallback = (res) => {
+          const suggestions = [];
+          for (const item of res) {
+            if (item.phrase === search.toLowerCase()) continue;
+            suggestions.push(item.phrase);
+          }
+          resolve(suggestions);
+        };
+        const script = document.createElement('script');
+        document.querySelector('head').appendChild(script);
+        script.src = `https://duckduckgo.com/ac/?callback=autocompleteCallback&q=${encodeURIComponent(search)}`;
+        script.onload = script.remove;
+        script.onerror = () => { script.remove(); resolve([]); };
+      });
+    }
+
+    static #formatSearchUrl(template, search) {
+      return template.replace(/{}/g, encodeURIComponent(search));
+    }
+
+    static #hasProtocol(s) { return /^[a-zA-Z]+:\/\//i.test(s); }
+    static #isUrl(s) {
+      return /^((https?:\/\/)?[\w-]+(\.[\w-]+)+\.?(:\d+)?(\/\S*)?)$/i.test(s);
+    }
+
+    static #parseQuery = (raw) => {
+      const query = raw.trim();
+      if (this.#isUrl(query)) {
+        const url = this.#hasProtocol(query) ? query : `https://${query}`;
+        return { query, url };
+      }
+      if (COMMANDS.has(query)) {
+        const { url } = COMMANDS.get(query);
+        return { key: query, query, url };
+      }
+      let splitBy = CONFIG.commandSearchDelimiter;
+      const [searchKey, rawSearch] = query.split(new RegExp(`${splitBy}(.*)`));
+      if (COMMANDS.has(searchKey)) {
+        const command = COMMANDS.get(searchKey);
+        const template = new URL(command.searchTemplate ?? '', command.url);
+        const search = (rawSearch || '').trim();
+        const url = Search.#formatSearchUrl(decodeURI(template.href), search);
+        return { key: searchKey, query, search, splitBy, url };
+      }
+      splitBy = CONFIG.commandPathDelimiter;
+      const [pathKey, path] = query.split(new RegExp(`${splitBy}(.*)`));
+      if (COMMANDS.has(pathKey)) {
+        const command = COMMANDS.get(pathKey);
+        const url = `${new URL(command.url).origin}/${path}`;
+        return { key: pathKey, path, query, splitBy, url };
+      }
+      const url = Search.#formatSearchUrl(CONFIG.defaultSearchTemplate, query);
+      return { query, search: query, url };
+    };
+
+    static #getHistory() {
+      try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+      catch { return []; }
+    }
+
+    static #addToHistory(query) {
+      if (!query || query.length < 2) return;
+      let history = Search.#getHistory();
+      let found = false;
+      history = history.map(([item, count]) => {
+        if (item.toLowerCase() === query.toLowerCase()) {
+          found = true;
+          return [item, count + 1];
+        }
+        return [item, count];
+      });
+      if (!found) history.push([query, 1]);
+      history.sort((a, b) => b[1] - a[1]);
+      history = history.slice(0, HISTORY_LIMIT);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+
+    static clearHistory() { localStorage.removeItem(HISTORY_KEY); }
+
+    static #getDefaultSuggestions(query, limit) {
+      const defaults = (CONFIG.suggestionDefaults || {})[query] || [];
+      return defaults.slice(0, limit);
+    }
+
+    static #getHistorySuggestions(query, limit) {
+      if (!query) return [];
+      const q = query.toLowerCase();
+      return Search.#getHistory()
+        .map(([item]) => item)
+        .filter((item) => item.toLowerCase() !== q && item.toLowerCase().includes(q))
+        .slice(0, limit);
+    }
+
+    static #colorFor(key) {
+      if (!key) return null;
+      const cmd = COMMANDS.get(key);
+      if (cmd?.color) return cmd.color;
+      if (key.includes(CONFIG.commandPathDelimiter)) {
+        const parent = key.split(CONFIG.commandPathDelimiter)[0];
+        return COMMANDS.get(parent)?.color || null;
+      }
+      return null;
+    }
+
+    #open() {
+      this.#closeController?.abort();
+      this.#closeController = null;
+      this.#dialog.show();
+      requestAnimationFrame(() => this.#dialog.classList.add('visible'));
+    }
+
+    #close() {
+      this.#closeController?.abort();
+      this.#closeController = new AbortController();
+      this.#dialog.classList.remove('visible');
+      this.#input.value = '';
+      this.#input.blur();
+      this.#suggestions.innerHTML = '';
+      this.#dialog.style.background = '';
+      this.#lastSuggestions = [];
+
+      this.#dialog.addEventListener(
+        'transitionend',
+        () => {
+          if (!this.#dialog.classList.contains('visible')) this.#dialog.close();
+          this.#closeController = null;
+        },
+        { once: true, signal: this.#closeController.signal }
+      );
+    }
+
+    #execute(query) {
+      Search.#addToHistory(query);
+      const target = CONFIG.openLinksInNewTab ? '_blank' : '_self';
+      window.open(Search.#parseQuery(query).url, target, 'noopener noreferrer');
+      this.#close();
+    }
+
+    #setColorsFromQuery() {
+      const parsed = Search.#parseQuery(this.#input.value);
+      const color = Search.#colorFor(parsed.key);
+      this.#dialog.style.background = color || '';
+    }
+
+    #focusNextSuggestion(previous = false) {
+      const active = this.shadowRoot.activeElement;
+      let nextIndex;
+      if (active?.dataset?.index) {
+        const activeIndex = Number(active.dataset.index);
+        nextIndex = previous ? activeIndex - 1 : activeIndex + 1;
+      } else {
+        nextIndex = previous ? this.#suggestions.childElementCount - 1 : 0;
+      }
+      const next = this.#suggestions.children[nextIndex];
+      if (next) next.querySelector('.suggestion').focus();
+      else this.#input.focus();
+    }
+
+    #computeLocalSuggestions(oq) {
+      const cmds = [];
+
+      const parentKey = oq.query.split(CONFIG.commandPathDelimiter)[0];
+      const explicit =
+        COMMANDS.get(oq.query)?.suggestions ??
+        COMMANDS.get(parentKey)?.suggestions ??
+        [];
+
+      for (const s of explicit) {
+        if (s !== oq.query && s.includes(oq.query) && !cmds.includes(s)) cmds.push(s);
+      }
+      for (const [key, cmd] of COMMANDS.entries()) {
+        if (key !== oq.query && key.includes(oq.query) && !cmds.includes(key)) cmds.push(key);
+        for (const s of cmd.suggestions ?? []) {
+          if (s !== oq.query && s.includes(oq.query) && !cmds.includes(s)) cmds.push(s);
+        }
+      }
+
+      const out = [...cmds];
+      const influencers = CONFIG.suggestionInfluencers || [];
+
+      const defaultInf = influencers.find((i) => i.name === 'Default');
+      if (defaultInf && oq.query.length >= (defaultInf.minChars || 0)) {
+        out.push(...Search.#getDefaultSuggestions(oq.query, defaultInf.limit || 10));
+      }
+      const histInf = influencers.find((i) => i.name === 'History');
+      if (histInf && oq.query.length >= (histInf.minChars || 0)) {
+        out.push(...Search.#getHistorySuggestions(oq.query, histInf.limit || 10));
+      }
+
+      return [...new Set(out)].slice(0, CONFIG.suggestionLimit);
+    }
+
+    #onInput = async () => {
+      const oq = Search.#parseQuery(this.#input.value);
+      if (!oq.query) { this.#close(); return; }
+
+      this.#setColorsFromQuery();
+
+      const local = this.#computeLocalSuggestions(oq);
+      const stale = this.#lastSuggestions.filter((s) => s.includes(oq.query));
+      const immediate = [...new Set([...local, ...stale])].slice(0, CONFIG.suggestionLimit);
+
+      if (immediate.length) this.#renderSuggestions(immediate, oq.query);
+      else this.#suggestions.innerHTML = '';
+
+      const ddgInf = (CONFIG.suggestionInfluencers || []).find((i) => i.name === 'DuckDuckGo');
+      if (!ddgInf) return;
+
+      const ddgQuery = (oq.search ?? oq.query ?? '').trim();
+      if (ddgQuery.length < (ddgInf.minChars || 0)) return;
+
+      const res = await Search.#fetchDuckDuckGoSuggestions(ddgQuery);
+      const nq = Search.#parseQuery(this.#input.value);
+      if (nq.query !== oq.query) return;
+
+      const ddgLimit = ddgInf.limit || 10;
+      const ddgSuggestions = (
+        oq.splitBy && oq.key ? res.map((s) => `${oq.key}${oq.splitBy}${s}`) : res
+      ).slice(0, ddgLimit);
+
+      this.#lastSuggestions = ddgSuggestions;
+
+      const final = [...new Set([...local, ...ddgSuggestions])].slice(0, CONFIG.suggestionLimit);
+      if (final.length) this.#renderSuggestions(final, oq.query);
+      else this.#suggestions.innerHTML = '';
+    };
+
+    #onPaste = (e) => {
+      if (this.#dialog.classList.contains('visible')) return;
+      const text = e.clipboardData?.getData('text');
+      if (!text) return;
+      e.preventDefault();
+      this.#open();
+      this.#input.focus();
+      this.#input.value = text;
+      this.#onInput();
+    };
+
+    #onKeydown = (e) => {
+      if (!this.#dialog.classList.contains('visible')) {
+        if (e.key === 'Escape') {
+          if (this.#dialog.open) {
+            this.#closeController?.abort();
+            this.#closeController = null;
+            this.#input.value = '';
+            this.#input.blur();
+            this.#dialog.close();
+            this.#suggestions.innerHTML = '';
+            this.#dialog.style.background = '';
+            this.#lastSuggestions = [];
+          }
+          return;
+        }
+        this.#closeController?.abort();
+        this.#closeController = null;
+        this.#dialog.show();
+        this.#input.focus();
+        requestAnimationFrame(() => {
+          if (!this.#input.value) {
+            this.#input.blur();
+            this.#dialog.close();
+            this.#suggestions.innerHTML = '';
+          } else {
+            this.#dialog.classList.add('visible');
+          }
+        });
+        return;
+      }
+
+      if (e.key === 'Escape') { this.#close(); return; }
+
+      const alt = e.altKey ? 'alt-' : '';
+      const ctrl = e.ctrlKey ? 'ctrl-' : '';
+      const meta = e.metaKey ? 'meta-' : '';
+      const shift = e.shiftKey ? 'shift-' : '';
+      const modifierPrefixedKey = `${alt}${ctrl}${meta}${shift}${e.key}`;
+
+      if (/^(ArrowDown|Tab|ctrl-n)$/.test(modifierPrefixedKey)) {
+        e.preventDefault(); this.#focusNextSuggestion(); return;
+      }
+      if (/^(ArrowUp|ctrl-p|shift-Tab)$/.test(modifierPrefixedKey)) {
+        e.preventDefault(); this.#focusNextSuggestion(true);
+      }
+    };
+
+    #onSubmit = () => { this.#execute(this.#input.value); };
+
+    #onSuggestionClick = (e) => {
+      const ref = e.target.closest('.suggestion');
+      if (!ref) return;
+      this.#execute(ref.dataset.suggestion);
+    };
+
+    #renderSuggestions(suggestions, query) {
+      const focused = this.shadowRoot.activeElement?.dataset?.suggestion;
+      this.#suggestions.innerHTML = '';
+      const suggestionTemplate = document.getElementById('suggestion-template');
+      const matchTemplate = document.getElementById('match-template');
+      const pattern = new RegExp(Search.#escapeRegexCharacters(query), 'i');
+
+      for (const [index, suggestion] of suggestions.entries()) {
+        const clone = suggestionTemplate.content.cloneNode(true);
+        const ref = clone.querySelector('.suggestion');
+        ref.dataset.index = index;
+        ref.dataset.suggestion = suggestion;
+
+        const parsed = Search.#parseQuery(suggestion);
+        const color = Search.#colorFor(parsed.key);
+        if (color) ref.style.setProperty('--suggestion-color', color);
+
+        const matched = suggestion.match(pattern);
+        if (matched) {
+          const matchClone = matchTemplate.content.cloneNode(true);
+          const matchRef = matchClone.querySelector('.match');
+          const pre = suggestion.slice(0, matched.index);
+          const post = suggestion.slice(matched.index + matched[0].length);
+          matchRef.innerText = matched[0];
+          matchRef.insertAdjacentText('beforebegin', pre);
+          matchRef.insertAdjacentText('afterend', post);
+          ref.append(matchClone);
+        } else {
+          ref.innerText = suggestion;
+        }
+
+        this.#suggestions.append(clone);
+      }
+
+      if (focused) {
+        const toRefocus = this.#suggestions.querySelector(
+          `[data-suggestion="${CSS.escape(focused)}"]`
+        );
+        toRefocus?.focus();
+      }
+    }
+  }
+
+  customElements.define('search-component', Search);
+</script>
+
+<style>
+  html {
+    background-color: var(--color-background);
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+    line-height: 1.4;
+    user-select: none;
+  }
+  body { margin: 0; }
+</style>
+
+<commands-component></commands-component>
+<search-component></search-component>
+
+<link rel="icon" type="image/png" href="https://cdn0.iconfinder.com/data/icons/solid-line-essential-ui-icon-set/512/essential_set_home-512.png">
